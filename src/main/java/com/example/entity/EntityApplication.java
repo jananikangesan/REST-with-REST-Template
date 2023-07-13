@@ -12,11 +12,17 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 public class EntityApplication implements CommandLineRunner {
 
 	private ProductRepository productRepository;
+	private RestTemplate restTemplate;
+
 	private Logger LOG=LoggerFactory.getLogger(EntityApplication.class);
 
 	@Autowired
@@ -30,6 +36,8 @@ public class EntityApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
+
+		restTemplate = new RestTemplate();
 
 
 		Product product1=new Product();
@@ -62,58 +70,19 @@ public class EntityApplication implements CommandLineRunner {
 
 		productRepository.save(product3);
 
-		/******Deleting with JPA ******/
-		//productRepository.delete(product3);
 
-//		Product foundProduct =productRepository.findByType("GENERAL");
-//
-//		if(foundProduct != null){
-//			LOG.info("Product count in database : " + productRepository.count());
-//			productRepository.delete(foundProduct);
-//			LOG.info("Product is deleted");
-//			LOG.info("Product count in database : " + productRepository.count());
-//		}
-
-		/********** Updating with JPA ***********/
-
-		Product productToUpdate = productRepository.findByType("SPECIFIC");
-
-		if(productToUpdate != null){
-			LOG.info("Before update product details: "+ productToUpdate);
-			productToUpdate.setName("Updated Product");
-			productToUpdate.setDescription("Updated description");
-
-			Product updated = productRepository.save(productToUpdate);
-			LOG.info("Updated product details: "+updated.toString());
+		//RestTemplate call
+		ResponseEntity<Product> responseEntity = restTemplate.getForEntity("http://localhost:8080/api/products/4028b881894d9e9801894d9ea34f0000", Product.class);
+		if (responseEntity.getStatusCode() == HttpStatus.OK) {
+			Product productFromRestTemplate = responseEntity.getBody();
+			if (productFromRestTemplate != null) {
+				LOG.info("product received with restTemplate: " + productFromRestTemplate.toString());
+			} else {
+				LOG.info("productFromRestTemplate is null");
+			}
+		} else {
+			LOG.info("Error retrieving product from restTemplate. Status code: " + responseEntity.getStatusCode());
 		}
-
-
-
-		/******** Querying Data with JPA *********/
-
-//		List<Product> products =productRepository.findAll();
-//		for(Product product:products){
-//			LOG.info("Products found :"+product.toString());
-//		}
-
-//		Product resultProduct= productRepository.findByType("GENERAL");
-//		LOG.info("GENERAL type of products found: "+ resultProduct.toString());
-
-//		List<Product> results= productRepository.findByDescriptionAndCategory("This is a tester product","TEST");
-//
-//		for(Product product:results){
-//			LOG.info("Matching results are:"+ product.toString());
-//		}
-
-		//List <String> names=new ArrayList<>();
-		//names.add("Tester Product");
-		//names.add("Another Tester Product");
-
-		//List<Product> resultProducts=productRepository.findByCategoryAndNameIn("TEST",names);
-
-		//for(Product product: resultProducts){
-		//	LOG.info("Matching results for findByCategoryAndNameIn:"+ product.toString());
-		//}
 
 	}
 
